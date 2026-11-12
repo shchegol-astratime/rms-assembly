@@ -10,6 +10,8 @@ x-rms: &rms
    RMS_WMS__STORE_ID: ${RMS_WMS__STORE_ID:?задайте номер торговой точки в WMS}
    RMS_DARKSTORE_DB_URL__BASE_URL: ${RMS_DARKSTORE_DB_URL__BASE_URL:?задайте адрес API DarkstoreDB}
    RMS_WMS_TOKEN: ${RMS_WMS_TOKEN:?задайте токен WMS}
+ extra_hosts:
+   - "host.docker.internal:host-gateway"
  volumes:
    - ./config:/etc/rms:ro
 
