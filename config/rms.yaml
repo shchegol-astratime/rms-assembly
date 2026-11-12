@@ -1,0 +1,26 @@
+instance_id: darkstore-local
+
+wms:
+ auth:
+   type: bearer
+   token_env: RMS_WMS_TOKEN
+ poll_interval: 2s
+ request_timeout: 5s
+
+dispatch:
+ status_poll_interval: 1s
+
+logging:
+ level: INFO
+ format: text
+ file: null
+
+database:
+ dsn_env: RMS_DB_DSN
+ lock_retry_interval: 5s
+
+http:
+ host: 0.0.0.0
+ port: 8080
+
+shutdown_grace: 10s

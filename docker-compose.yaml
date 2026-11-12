@@ -1,0 +1,55 @@
+name: rms-assembly
+
+x-rms: &rms
+ image: ${RMS_IMAGE:?задайте образ, например shchegolastratime/rms-assembly:0.1.0}
+ pull_policy: missing
+ environment:
+   RMS_CONFIG: /etc/rms/rms.yaml
+   RMS_DB_DSN: postgresql://rms:${POSTGRES_PASSWORD:-rms}@postgres:5432/rms
+   RMS_WMS__BASE_URL: ${RMS_WMS__BASE_URL:?задайте адрес WMS, например http://wms.local/api}
+   RMS_WMS__STORE_ID: ${RMS_WMS__STORE_ID:?задайте номер торговой точки в WMS}
+   RMS_DARKSTORE_DB_URL__BASE_URL: ${RMS_DARKSTORE_DB_URL__BASE_URL:?задайте адрес API DarkstoreDB}
+   RMS_WMS_TOKEN: ${RMS_WMS_TOKEN:?задайте токен WMS}
+ volumes:
+   - ./config:/etc/rms:ro
+
+services:
+ postgres:
+   image: postgres:16
+   environment:
+     POSTGRES_USER: rms
+     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rms}
+     POSTGRES_DB: rms
+   volumes:
+     - pgdata:/var/lib/postgresql/data
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U rms -d rms"]
+     interval: 2s
+     timeout: 3s
+     retries: 30
+   restart: unless-stopped
+
+ # Одноразовый: применяет миграции и завершается; rms стартует после его успеха
+ rms-migrate:
+   <<: *rms
+   command: ["migrate"]
+   restart: "no"
+   healthcheck:
+     disable: true
+   depends_on:
+     postgres:
+       condition: service_healthy
+
+ rms:
+   <<: *rms
+   command: ["run"]
+   restart: unless-stopped
+   stop_grace_period: 15s
+   ports:
+     - "${RMS_HTTP_HOST_PORT:-8080}:8080"
+   depends_on:
+     rms-migrate:
+       condition: service_completed_successfully
+
+volumes:
+ pgdata:
