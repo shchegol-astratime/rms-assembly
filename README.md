@@ -10,5 +10,5 @@ docker compose up -d
 
 По умолчанию дашборд находится по адресу
 ```
-http://localhost:8280/ui
+http://localhost:8080/ui
 ```
