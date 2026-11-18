@@ -5,18 +5,18 @@ x-rms: &rms
  pull_policy: missing
  environment:
    RMS_CONFIG: /etc/rms/rms.yaml
-   RMS_DB_DSN: postgresql://rms:${POSTGRES_PASSWORD:-rms}@postgres:5432/rms
+   RMS_DB_DSN: ${RMS_DB_DSN:-postgresql://rms:rms@localhost:${RMS_POSTGRES_HOST_PORT:-55432}/rms}
    RMS_WMS__BASE_URL: ${RMS_WMS__BASE_URL:?задайте адрес WMS, например http://wms.local/api}
    RMS_WMS__STORE_ID: ${RMS_WMS__STORE_ID:?задайте номер торговой точки в WMS}
    RMS_DARKSTORE_DB_URL__BASE_URL: ${RMS_DARKSTORE_DB_URL__BASE_URL:?задайте адрес API DarkstoreDB}
    RMS_WMS_TOKEN: ${RMS_WMS_TOKEN:?задайте токен WMS}
- extra_hosts:
-   - "host.docker.internal:host-gateway"
+ network_mode: host
  volumes:
    - ./config:/etc/rms:ro
 
 services:
  postgres:
+   container_name: rms-db
    image: postgres:16
    environment:
      POSTGRES_USER: rms
@@ -24,6 +24,8 @@ services:
      POSTGRES_DB: rms
    volumes:
      - pgdata:/var/lib/postgresql/data
+   ports:
+     - "127.0.0.1:${RMS_POSTGRES_HOST_PORT:-55432}:5432"
    healthcheck:
      test: ["CMD-SHELL", "pg_isready -U rms -d rms"]
      interval: 2s
@@ -45,6 +47,7 @@ services:
  rms:
    <<: *rms
    command: ["run"]
+   container_name: rms
    restart: unless-stopped
    stop_grace_period: 15s
    ports:
